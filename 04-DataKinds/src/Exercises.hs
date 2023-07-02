@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DataKinds      #-}
 {-# LANGUAGE GADTs          #-}
 {-# LANGUAGE KindSignatures #-}
@@ -21,7 +22,24 @@ data IntegerMonoid = Sum | Product
 -- | a. Write a newtype around 'Integer' that lets us choose which instance we
 -- want.
 
+data IntegerMonoidWrapper (monoid :: IntegerMonoid) where
+   SumWrapper :: Integer -> IntegerMonoidWrapper Sum
+   ProductWrapper :: Integer -> IntegerMonoidWrapper Product
+
+
 -- | b. Write the two monoid instances for 'Integer'.
+
+instance Semigroup (IntegerMonoidWrapper Sum) where
+  (<>) (SumWrapper a) (SumWrapper b) = SumWrapper (a + b)
+instance Monoid (IntegerMonoidWrapper Sum) where
+  mempty = SumWrapper 0
+
+instance Semigroup (IntegerMonoidWrapper Product) where
+  (<>) (ProductWrapper a) (ProductWrapper b) = ProductWrapper (a * b)
+instance Monoid (IntegerMonoidWrapper Product) where
+  mempty = ProductWrapper 1
+
+
 
 -- | c. Why do we need @FlexibleInstances@ to do this?
 

@@ -14,8 +14,9 @@ import Data.Kind (Constraint, Type)
 
 {- ONE -}
 
-class Question1 a
--- instance Question1 Maybe
+class Question1 (a :: Type -> Type)
+
+instance Question1 Maybe
 
 
 
@@ -23,8 +24,9 @@ class Question1 a
 
 {- TWO -}
 
-class Question2 a
--- instance Question2 Either
+class Question2 (a :: Type -> Type -> Type)
+
+instance Question2 Either
 
 
 
@@ -32,8 +34,9 @@ class Question2 a
 
 {- THREE -}
 
-class Question3 a
--- instance Question3 (,,)
+class Question3 (a :: Type -> Type -> Type -> Type)
+
+instance Question3 (,,)
 
 
 
@@ -41,8 +44,9 @@ class Question3 a
 
 {- FOUR -}
 
-class Question4 a
--- instance Question4 (->)
+class Question4 (a :: Type -> Type -> Type)
+
+instance Question4 (->)
 
 
 
@@ -51,7 +55,8 @@ class Question4 a
 {- FIVE -}
 
 class Question5 a
--- instance Question5 [[Int]]
+
+instance Question5 [[Int]]
 
 
 
@@ -60,7 +65,8 @@ class Question5 a
 {- SIX -}
 
 class Question6 a
--- instance Question6 (Either () (Maybe (IO String)))
+
+instance Question6 (Either () (Maybe (IO String)))
 
 
 
@@ -68,8 +74,9 @@ class Question6 a
 
 {- SEVEN -}
 
-class Question7 a
--- instance Question7 (Eq Int) -- This instance looks flexible...
+class Question7 (a ::  Constraint)
+
+instance Question7 (Eq Int) -- This instance looks flexible...
 
 
 
@@ -77,8 +84,9 @@ class Question7 a
 
 {- EIGHT -}
 
-class Question8 a
--- instance Question8 Show
+class Question8 (a :: Type -> Constraint)
+
+instance Question8 Show
 
 
 
@@ -86,8 +94,9 @@ class Question8 a
 
 {- NINE -}
 
-class Question9 a
--- instance Question9 (Functor Maybe)
+class Question9 (a :: Constraint)
+
+instance Question9 (Functor Maybe)
 
 
 
@@ -99,4 +108,7 @@ class Question9 a
 -- should it be? Which part is broken? What's wrong with it?
 
 class Question10 a
--- instance Question10 (Monad m, Eq m, Show a)
+
+-- Eq and Show have the same kind : both are of kind Type -> Constraint
+-- While Monad is of kind Type -> Type.
+--instance Question10 (Monad m, Eq m, Show a)
