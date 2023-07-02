@@ -1,12 +1,14 @@
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE ExistentialQuantification #-}
+
+
 module Exercises where
 
-
-
-
+import Control.Monad
 
 
 {- ONE -}
@@ -98,7 +100,6 @@ data TransformableTo output where
     :: (input -> output)
     ->  input
     -> TransformableTo output
-
 -- | ... and the following values of this GADT:
 
 transformable1 :: TransformableTo String
@@ -110,6 +111,7 @@ transformable2 = TransformWith (uncurry (++)) ("Hello,", " world!")
 -- | a. Which type variable is existential inside 'TransformableTo'? What is
 -- the only thing we can do to it? input is the existential type variable.
 --  We can apply the given function to it.
+-- | Clearly input is the existential type
 
 -- | b. Could we write an 'Eq' instance for 'TransformableTo'? What would we be
 -- able to check?
@@ -363,14 +365,39 @@ data DirtyExpr
   | DirtyIntValue  Int
   | DirtyBoolValue Bool
 
-parse :: DirtyExpr -> Maybe (Expr Int)
-parse = undefined
+
+data Type where
+  IntType :: Expr Int -> Type
+  BoolType :: Expr Bool -> Type
+
+parse :: DirtyExpr -> Maybe Type
+parse (DirtyEquals x y) = do
+  IntType x' <- parse x
+  IntType y' <- parse y
+  return $ BoolType (Equals x' y')
+parse (DirtyAdd x y) = do
+  IntType x' <- parse x
+  IntType y' <- parse y
+  return $ IntType (Add x' y')
+parse (DirtyIf x y z) = do
+  BoolType x' <- parse x
+  y' <- parse y
+  z' <- parse z
+  return $ y'
+parse (DirtyIntValue x) = return $ IntType (IntValue x)
+parse (DirtyBoolValue x) = return $ BoolType (BoolValue x)
+
+
 
 -- | c. Can we add functions to our 'Expr' language? If not, why not? What
 -- other constructs would we need to add? Could we still avoid 'Maybe' in the
 -- 'eval' function?
 
+-- | Maybe something like this?
 
+data FuncExpr a where
+  Lambda :: forall a b. (Expr a -> Expr b) -> FuncExpr (Expr a -> Expr b)
+  Apply  :: forall a b. FuncExpr (Expr a -> Expr b) -> Expr a -> FuncExpr b
 
 
 
@@ -385,13 +412,14 @@ parse = undefined
 -- long as the input of one lines up with the output of the next.
 
 data TypeAlignedList a b where
-  -- ...
+  TANil :: TypeAlignedList a a
+  TACons :: (a -> b1) -> TypeAlignedList b1 b -> TypeAlignedList a b
 
--- | b. Which types are existential?
+-- | b. Which types are existential? b1?
 
 -- | c. Write a function to append type-aligned lists. This is almost certainly
 -- not as difficult as you'd initially think.
 
-composeTALs :: TypeAlignedList b c -> TypeAlignedList a b -> TypeAlignedList a c
-composeTALs = error "Implement me, and then celebrate!"
-
+composeTALs :: TypeAlignedList a b -> TypeAlignedList b c -> TypeAlignedList a c
+composeTALs TANil xs = xs
+composeTALs (TACons f xs) ys = TACons f (composeTALs xs ys)
